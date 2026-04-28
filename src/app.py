@@ -29,14 +29,73 @@ def sitemap():
     return generate_sitemap(app)
 
 
+# GET /members
+# This endpoint returns all the family members
 @app.route('/members', methods=['GET'])
-def handle_hello():
-    # This is how you can use the Family datastructure by calling its methods
+def get_all_members():
     members = jackson_family.get_all_members()
-    response_body = {"hello": "world",
-                     "family": members}
-    return jsonify(response_body), 200
+    return jsonify(members), 200
 
+
+# GET /members/<member_id>
+# This endpoint returns one family member by id
+@app.route('/members/<int:member_id>', methods=['GET'])
+def get_one_member(member_id):
+    member = jackson_family.get_member(member_id)
+
+    if member is None:
+        return jsonify({
+            "error": "Member not found"
+        }), 404
+
+    return jsonify(member), 200
+
+
+# POST /members
+# This endpoint adds a new family member
+@app.route('/members', methods=['POST'])
+def add_new_member():
+    body = request.get_json()
+
+    if body is None:
+        return jsonify({
+            "error": "You need to send a JSON body"
+        }), 400
+
+    if "first_name" not in body:
+        return jsonify({
+            "error": "first_name is required"
+        }), 400
+
+    if "age" not in body:
+        return jsonify({
+            "error": "age is required"
+        }), 400
+
+    if "lucky_numbers" not in body:
+        return jsonify({
+            "error": "lucky_numbers is required"
+        }), 400
+
+    new_member = jackson_family.add_member(body)
+
+    return jsonify(new_member), 200
+
+
+# DELETE /members/<member_id>
+# This endpoint deletes one family member by id
+@app.route('/members/<int:member_id>', methods=['DELETE'])
+def delete_one_member(member_id):
+    was_deleted = jackson_family.delete_member(member_id)
+
+    if was_deleted is False:
+        return jsonify({
+            "error": "Member not found"
+        }), 404
+
+    return jsonify({
+        "done": True
+    }), 200
 
 
 # This only runs if `$ python src/app.py` is executed
